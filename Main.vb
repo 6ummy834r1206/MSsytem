@@ -9,7 +9,7 @@ Imports System.Threading
 
 Public Class Main
 
-    Public cnStr As String = "Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\MyDB.mdf;Integrated Security=True;Connect Timeout=30"
+    Public cnStr As String = "Data Source=;AttachDbFilename=;Integrated Security=True;Connect Timeout=30"
     Public tcp As New TcpClient
     Public heightN As Integer = 1
     Public IDD As Integer = 1
@@ -31,7 +31,6 @@ Public Class Main
     Public stopReason As String = ""
     Public errcode As Integer = 0
     Dim ms As Integer = 0
-    '  故障又急停?  ，設定的地方確認有修改才修改(設定再回去設計)，
     Private Sub Main_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Timer1.Start()
         DataGridView1.RowHeadersVisible = False
@@ -54,13 +53,13 @@ Public Class Main
     End Sub
 
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
-        Timer1.Interval = 1000 '代表說每1秒跑一下,如100則為0.1秒,依此類推 
+        Timer1.Interval = 1000
     End Sub
 
     Public Sub TPNewWork()
         Try
             If tcp.Connected = True Then
-                Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H2A, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H10}
+                Dim sendbuf As Byte() = New Byte() {}
                 tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
             End If
         Catch ex As Exception
@@ -70,7 +69,7 @@ Public Class Main
     Private Sub TPEndWork()
         Try
             If tcp.Connected = True Then
-                Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H2A, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H0}
+                Dim sendbuf As Byte() = New Byte() {}
                 tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
             End If
         Catch ex As Exception
@@ -80,7 +79,7 @@ Public Class Main
     Private Sub TPRunning()
         Try
             If tcp.Connected = True Then
-                Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H2B, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H10}
+                Dim sendbuf As Byte() = New Byte() {}
                 tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
             Else
                 MsgBox("請確認連線是否正常")
@@ -92,7 +91,7 @@ Public Class Main
     Private Sub TPStopping()
         Try
             If tcp.Connected = True Then
-                Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H2B, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H0}
+                Dim sendbuf As Byte() = New Byte() {}
                 tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
             End If
         Catch ex As Exception
@@ -162,7 +161,7 @@ Public Class Main
     Public Function ConnectOn()
         Try
             If tcp.Connected = False Then
-                tcp.Connect("192.168.1.100", 1026)
+                tcp.Connect("", )
             End If
         Catch ex As SocketException
             MsgBox(ex.Message)
@@ -210,15 +209,15 @@ Public Class Main
     End Sub
 
     Private Sub WriteRestart()
-        Dim filePath As String = "d:\" + Year(Now()).ToString + "\" + Month(Now()).ToString + "\" + "Error Code" + ".xlsx"
+        Dim filePath As String = "".xlsx"
         Try
             Dim excelApp As Excel.Application
             Dim excelWorksheet As Excel.Worksheet
             Dim excelBook As Excel.Workbook
             excelApp = CreateObject("Excel.Application")
-            excelBook = excelApp.Workbooks.Open(filePath) '路徑 
+            excelBook = excelApp.Workbooks.Open(filePath)
             excelApp.Visible = False
-            excelWorksheet = excelApp.ActiveWorkbook.Sheets("ErrCode") '表單 
+            excelWorksheet = excelApp.ActiveWorkbook.Sheets("ErrCode")
             excelWorksheet.Activate()
             Dim restartInfo As String() = {Now().ToString, "'" + Label1.Text, "復機", "", "'" + Label2.Text}
             Dim lastRow As Integer = excelWorksheet.UsedRange.Rows.Count + 1
@@ -253,25 +252,25 @@ Public Class Main
             While True
                 Try
                     If tcp.Connected = True Then
-                        Dim sendbuf As Byte() = New Byte() {&H0, &HFF, &HA, &H0, &H36, &H1, &H0, &H0, &H20, &H4D, &H2, &H0}
+                        Dim sendbuf As Byte() = New Byte() {}
                         tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
                         delay(200)
                         If tcp.GetStream.CanRead = True Then
                             Dim readbuf(tcp.ReceiveBufferSize) As Byte
-                            tcp.GetStream.Read(readbuf, 0, tcp.ReceiveBufferSize) '00正常 10急停 01故障 11??
+                            tcp.GetStream.Read(readbuf, 0, tcp.ReceiveBufferSize)
                             run = BitConverter.ToInt32(readbuf, 2)
                             Select Case run
-                                Case &H10 '急停
+                                Case '急停
                                     StopM()
                                     Label19.ForeColor = Color.Green
                                     Label19.Text = "運行中"
                                     delay(200)
-                                Case &H1 '故障
+                                Case '故障
                                     Err()
                                     Label19.ForeColor = Color.Green
                                     Label19.Text = "運行中"
                                     delay(200)
-                                Case &H11
+                                Case 
                                     Label19.ForeColor = Color.Black
                                     Label19.Text = "待機中"
                                     MsgBox("請先停機，再重新啟動", 16, "錯誤")
@@ -280,7 +279,7 @@ Public Class Main
                             MsgBox("無傳回資料", 16, "錯誤")
                         End If
 checkCCD:
-                        sendbuf = New Byte() {&H1, &HFF, &HA, &H0, &HB9, &HB, &H0, &H0, &H20, &H44, &H2, &H0}
+                        sendbuf = New Byte() {}
                         tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
                         delay(200)
                         If tcp.GetStream.CanRead = True Then
@@ -335,7 +334,7 @@ checkCCD:
         Dim cn As New SqlConnection(cnStr)
         Try
             cn.Open()
-            Dim commandtext1 As String = "UPDATE CurrentWork SET Shift=N'" + Label3.Text + "',OKh=N'" + Convert.ToString(heightOK) + "',NGh =N'" + Convert.ToString(heightNG) + "',CCDNG =N'" + Convert.ToString(ccdNG) + "',EndTime=N'" + Now.ToString("yyyy/MM/dd HH:mm:ss") + "'Where Operator ='" + Label2.Text + "'"
+            Dim commandtext1 As String = ""
             Dim cmd1 As New SqlCommand(commandtext1, cn)
             cmd1.ExecuteNonQuery()
         Catch ex As Exception
@@ -357,15 +356,15 @@ checkCCD:
     End Sub
 
     Public Sub WritePause()
-        Dim filePath As String = "D:\" + Year(Now()).ToString + "\" + Month(Now()).ToString + "\" + "Error Code" + ".xlsx"
+        Dim filePath As String = "" + ".xlsx"
         Try
             Dim excelApp As Excel.Application
             Dim excelWorksheet As Excel.Worksheet
             Dim excelBook As Excel.Workbook
             excelApp = CreateObject("Excel.Application")
-            excelBook = excelApp.Workbooks.Open(filePath) '路徑 
+            excelBook = excelApp.Workbooks.Open(filePath)
             excelApp.Visible = False
-            excelWorksheet = excelApp.ActiveWorkbook.Sheets("ErrCode") '表單 
+            excelWorksheet = excelApp.ActiveWorkbook.Sheets("ErrCode")
             excelWorksheet.Activate()
             Dim errInfo As String() = {pauseTime, "'" + Label1.Text, Beginning.reason, "", "'" + Label2.Text}
             Dim lastRow As Integer = excelWorksheet.UsedRange.Rows.Count + 1
@@ -389,7 +388,7 @@ checkCCD:
     Private Sub TPStop()
         Try
             If tcp.Connected = True Then
-                Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H2C, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H0}
+                Dim sendbuf As Byte() = New Byte() {}
                 tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
             End If
         Catch ex As Exception
@@ -403,7 +402,7 @@ checkCCD:
         FindErrCode()
         delay(200)
         TPStop()
-        SerchErrTable(errcode)
+        SearchErrTable(errcode)
         Dim pwd As New Password
         pwd.page = 1
         pwd.ShowDialog()
@@ -419,15 +418,15 @@ checkCCD:
     End Sub
 
     Private Sub WriteStop(ByVal stopTime As String, ByVal solution As String)
-        Dim filePath As String = "d:\" + Year(Now()).ToString + "\" + Month(Now()).ToString + "\" + "Error Code" + ".xlsx"
+        Dim filePath As String = "" + ".xlsx"
         Try
             Dim excelApp As Excel.Application
             Dim excelWorksheet As Excel.Worksheet
             Dim excelBook As Excel.Workbook
             excelApp = CreateObject("Excel.Application")
-            excelBook = excelApp.Workbooks.Open(filePath) '路徑 
+            excelBook = excelApp.Workbooks.Open(filePath)
             excelApp.Visible = False
-            excelWorksheet = excelApp.ActiveWorkbook.Sheets("ErrCode") '表單 
+            excelWorksheet = excelApp.ActiveWorkbook.Sheets("ErrCode")
             excelWorksheet.Activate()
             Dim stopInfo As String() = {stopTime, "'" + Label1.Text, stopReason, solution, "'" + Label2.Text}
             Dim lastRow As Integer = excelWorksheet.UsedRange.Rows.Count + 1
@@ -451,7 +450,7 @@ checkCCD:
     Private Sub StopGone()
         Try
             If tcp.Connected = True Then
-                Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H2C, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H10}
+                Dim sendbuf As Byte() = New Byte() {}
                 tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
             End If
         Catch ex As Exception
@@ -462,7 +461,7 @@ checkCCD:
     Private Sub TPErr()
         Try
             If tcp.Connected = True Then
-                Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H2D, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H0}
+                Dim sendbuf As Byte() = New Byte() {}
                 tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
             End If
         Catch ex As Exception
@@ -472,7 +471,7 @@ checkCCD:
     Private Sub FindErrCode()
         Try
             If tcp.Connected = True Then
-                Dim sendbuf As Byte() = New Byte() {&H1, &HFF, &HA, &H0, &HB8, &HB, &H0, &H0, &H20, &H44, &H1, &H0}
+                Dim sendbuf As Byte() = New Byte() {}
                 tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
                 delay(200)
                 If tcp.GetStream.CanRead = True Then
@@ -490,11 +489,11 @@ checkCCD:
         End Try
     End Sub
 
-    Public Sub SerchErrTable(ByVal errcode As Integer)
+    Public Sub SearchErrTable(ByVal errcode As Integer)
         Try
             Dim cn As New SqlConnection(cnStr)
             cn.Open()
-            Dim commandtext As String = "SELECT * From ErrTable Where ErrCode ='" + Convert.ToString(errcode) + "'"
+            Dim commandtext As String = "SELECT * From ErrTable Where ErrCode ="
             Dim cmd As New SqlCommand(commandtext, cn)
             Dim dr As SqlDataReader
             dr = cmd.ExecuteReader
@@ -519,15 +518,15 @@ checkCCD:
         sol.reason = stopReason
         sol.solType = 0
         sol.ShowDialog()
-        Dim filePath As String = "d:\" + Year(Now()).ToString + "\" + Month(Now()).ToString + "\" + "Error Code" + ".xlsx"
+        Dim filePath As String = ""
         Try
             Dim excelApp As Excel.Application
             Dim excelWorksheet As Excel.Worksheet
             Dim excelBook As Excel.Workbook
             excelApp = CreateObject("Excel.Application")
-            excelBook = excelApp.Workbooks.Open(filePath) '路徑 
+            excelBook = excelApp.Workbooks.Open(filePath) 
             excelApp.Visible = False
-            excelWorksheet = excelApp.ActiveWorkbook.Sheets("ErrCode") '表單 
+            excelWorksheet = excelApp.ActiveWorkbook.Sheets("ErrCode")
             excelWorksheet.Activate()
             Dim errInfo As String() = {Now().ToString, "'" + Label1.Text, stopReason, sol.solution, "'" + Label2.Text}
             Dim lastRow As Integer = excelWorksheet.UsedRange.Rows.Count + 1
@@ -552,7 +551,7 @@ checkCCD:
     Private Sub ErrGone()
         Try
             If tcp.Connected = True Then
-                Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H2D, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H10}
+                Dim sendbuf As Byte() = New Byte() {}
                 tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
             End If
         Catch ex As Exception
@@ -566,7 +565,7 @@ checkCCD:
         FindErrCode()
         delay(200)
         TPErr()
-        SerchErrTable(errcode)
+        SearchErrTable(errcode)
         WriteErrCode()
         ErrGone()
     End Sub
@@ -626,13 +625,13 @@ checkCCD:
         Try
             If info = "NG" Then
                 If tcp.Connected = True Then
-                    Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H30, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H10}
+                    Dim sendbuf As Byte() = New Byte() {}
                     tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
                 End If
             Else
                 If info = "OK" Then
                     If tcp.Connected = True Then
-                        Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H2F, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H10}
+                        Dim sendbuf As Byte() = New Byte() {}
                         tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
                     End If
                 End If
@@ -679,18 +678,11 @@ checkCCD:
         End If
     End Sub
 
-    'Private Sub DataGridView1_CellFormatting(sender As Object, e As DataGridViewCellFormattingEventArgs) Handles DataGridView1.CellFormatting
-    'If heightInfo = "NG" Then
-    'Dim i As Integer = DataGridView1.Rows.Count - 1
-    '      DataGridView1.Rows(i).Cells(1).Style.ForeColor = Color.Red
-    'End If
-    ' End Sub
-
     Private Sub NewMonth()
-        Dim folder As String = "d:\" + (Year(Now())).ToString + "\" + (Month(Now()) - 1).ToString
+        Dim folder As String = "d:\"
         Dim killer As String = ""
         If (Directory.Exists(folder)) Then
-            If Not File.Exists("d:\" + Year(Now()).ToString + "\" + (Month(Now()) - 1).ToString + ".zip") Then
+            If Not File.Exists("d:\") Then
                 Dim load As New Loading
                 load.Label1.Text = "檔案壓縮中"
                 load.Show()
@@ -702,20 +694,20 @@ checkCCD:
                 Me.Focus()
             End If
             If Month(Now()) = 2 Then
-                killer = "d:\" + (Year(Now()) - 1).ToString + "\12.zip"
+                killer = ""
                 If File.Exists(killer) Then
                     My.Computer.FileSystem.DeleteFile(killer)
                 End If
             Else
-                killer = "d:\" + (Year(Now())).ToString + "\" + (Month(Now()) - 2).ToString + ".zip"
+                killer = ""
                 If File.Exists(killer) Then
                     My.Computer.FileSystem.DeleteFile(killer)
                 End If
             End If
         Else
-            folder = "d:\" + ((Year(Now()) - 1)).ToString + "\12"
+            folder = ""
             If (Directory.Exists(folder)) Then
-                If Not File.Exists("d:\" + (Year(Now()) - 1).ToString + "\" + "12" + ".zip") Then
+                If Not File.Exists("") Then
                     Dim load As New Loading
                     load.Label1.Text = "檔案壓縮中"
                     load.Show()
@@ -738,12 +730,12 @@ checkCCD:
         Try
             If Month(Now()).ToString <> "1" Then
                 Dim myprocess As New Process
-                Dim args = "a -tzip d:\" + Year(Now()).ToString + "\" + (Month(Now()) - 1).ToString + ".zip"
-                Dim pgm = "C:\Program Files\7-Zip\7z.exe"
+                Dim args = ""
+                Dim pgm = ""
                 With myprocess.StartInfo
                     .FileName = pgm
                     .Arguments = args
-                    .WorkingDirectory = "d:\" + Year(Now()).ToString + "\" + (Month(Now()) - 1).ToString
+                    .WorkingDirectory = "d:\"
                     .UseShellExecute = False
                     .CreateNoWindow = True
                     .RedirectStandardOutput = True
@@ -754,12 +746,12 @@ checkCCD:
                 myprocess.Close()
             Else
                 Dim myprocess As New Process
-                Dim args = "a -tzip d:\" + (Year(Now()) - 1).ToString + "\" + "12" + ".zip"
-                Dim pgm = "C:\Program Files\7-Zip\7z.exe"
+                Dim args = ""
+                Dim pgm = ""
                 With myprocess.StartInfo
                     .FileName = pgm
                     .Arguments = args
-                    .WorkingDirectory = "d:\" + (Year(Now()) - 1).ToString + "\" + "12"
+                    .WorkingDirectory = ""
                     .UseShellExecute = False
                     .CreateNoWindow = True
                     .RedirectStandardOutput = True
@@ -799,7 +791,7 @@ checkCCD:
     Private Sub TPChangeWork()
         Try
             If tcp.Connected = True Then
-                Dim sendbuf As Byte() = New Byte() {&H2, &HFF, &HA, &H0, &H31, &H1, &H0, &H0, &H20, &H4D, &H1, &H0, &H10}
+                Dim sendbuf As Byte() = New Byte() {}
                 tcp.GetStream.Write(sendbuf, 0, sendbuf.Length)
             End If
         Catch ex As SocketException
@@ -864,14 +856,14 @@ checkCCD:
             fso.CreateFolder(path)
             fso = Nothing
         End If
-        Shell("cmd /c move D:\圖片\*.bmp " + path)
+        Shell("cmd" + path)
     End Sub
 
     Private Sub HeightDataToCsv()
         Try
             Dim cn As New SqlConnection(cnStr)
             cn.Open()
-            Dim commandtext As String = "SELECT * From HeightTable ORDER BY ID ASC"
+            Dim commandtext As String = ""
             Dim cmd As New SqlCommand(commandtext, cn)
             Dim dr As SqlDataReader
             dr = cmd.ExecuteReader
@@ -882,9 +874,9 @@ checkCCD:
             Dim objWorkbook As Excel.Workbook
             Dim filePath As String = Work.workPath + ".xlsx"
             objExcelApp = CreateObject("Excel.Application")
-            objWorkbook = objExcelApp.Workbooks.Open(filePath) '路徑 
+            objWorkbook = objExcelApp.Workbooks.Open(filePath)
             objExcelApp.Visible = False
-            objSheet = objExcelApp.ActiveWorkbook.Sheets("測高") '表單 
+            objSheet = objExcelApp.ActiveWorkbook.Sheets("測高") 
             objSheet.Activate()
             '以下是要填入的資料 
             Dim intColCount As Integer = dt.Columns.Count
@@ -926,7 +918,7 @@ checkCCD:
         Try
             Dim cn As New SqlConnection(cnStr)
             cn.Open()
-            Dim commandtext As String = "SELECT * From OKTable ORDER BY OKID ASC"
+            Dim commandtext As String = ""
             Dim cmd As New SqlCommand(commandtext, cn)
             Dim dr As SqlDataReader
             dr = cmd.ExecuteReader
@@ -958,7 +950,7 @@ checkCCD:
             objWorkbook = Nothing
             objSheet = Nothing
             GC.Collect()
-            Dim commandtext1 As String = "TRUNCATE TABLE OKTable"
+            Dim commandtext1 As String = ""
             Dim cmd1 As New SqlCommand(commandtext1, cn)
             cmd1.ExecuteNonQuery()
             cn.Close()
@@ -971,7 +963,7 @@ checkCCD:
         Try
             Dim cn As New SqlConnection(cnStr)
             cn.Open()
-            Dim commandtext As String = "SELECT * From NGTable ORDER BY NGID ASC"
+            Dim commandtext As String = ""
             Dim cmd As New SqlCommand(commandtext, cn)
             Dim dr As SqlDataReader
             dr = cmd.ExecuteReader
@@ -982,9 +974,9 @@ checkCCD:
             Dim objWorkbook As Excel.Workbook
             Dim filePath As String = Work.workPath + ".xlsx"
             objExcelApp = CreateObject("Excel.Application")
-            objWorkbook = objExcelApp.Workbooks.Open(filePath) '路徑 
+            objWorkbook = objExcelApp.Workbooks.Open(filePath) 
             objExcelApp.Visible = False
-            objSheet = objExcelApp.ActiveWorkbook.Sheets("測高") '表單 
+            objSheet = objExcelApp.ActiveWorkbook.Sheets("測高")
             objSheet.Activate()
             '以下是要填入的資料 
             Dim intColCount As Integer = dt.Columns.Count
@@ -1023,7 +1015,7 @@ checkCCD:
         Try
             Dim cn As New SqlConnection(cnStr)
             cn.Open()
-            Dim commandtext As String = "SELECT * From CurrentWork ORDER BY EndTIME ASC"
+            Dim commandtext As String = ""
             Dim cmd As New SqlCommand(commandtext, cn)
             Dim dr As SqlDataReader
             dr = cmd.ExecuteReader
@@ -1034,9 +1026,9 @@ checkCCD:
             Dim objWorkbook As Excel.Workbook
             Dim filePath As String = Work.workPath + ".xlsx"
             objExcelApp = CreateObject("Excel.Application")
-            objWorkbook = objExcelApp.Workbooks.Open(filePath) '路徑 
+            objWorkbook = objExcelApp.Workbooks.Open(filePath)
             objExcelApp.Visible = False
-            objSheet = objExcelApp.ActiveWorkbook.Sheets("工單") '表單 
+            objSheet = objExcelApp.ActiveWorkbook.Sheets("工單") 
             objSheet.Activate()
             '以下是要填入的資料 
             objSheet.Cells(3, 2) = Label4.Text
@@ -1083,7 +1075,7 @@ checkCCD:
         Dim cn As New SqlConnection(cnStr)
         Try
             cn.Open()
-            Dim commandtext As String = "select * from CurrentWork ORDER BY EndTime DESC"
+            Dim commandtext As String = ""
             Dim cmd As New SqlCommand(commandtext, cn)
             Dim reader As SqlDataReader
             reader = cmd.ExecuteReader
